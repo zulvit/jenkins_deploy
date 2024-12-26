@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  jenkins-server:
+    image: jenkins/jenkins:lts-jdk17
+    container_name: jenkins-server
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    networks:
+      - jenkins-network
+
+  jenkins-agent:
+    image: jenkins/agent:latest
+    container_name: jenkins-agent
+    depends_on:
+      - jenkins-server
+    command: >
+      java -jar /usr/share/jenkins/agent.jar
+      -url http://jenkins-server:8080/
+      -secret 96206295a023f023fcbfbebf6d311983b174750a14cbe4338d849d042896f7e5
+      -name docker-agent
+      -webSocket
+      -workDir /home/jenkins/agent
+    volumes:
+      - agent_workdir:/home/jenkins/agent
+    networks:
+      - jenkins-network
+
+volumes:
+  jenkins_home:
+  agent_workdir:
+
+networks:
+  jenkins-network:
